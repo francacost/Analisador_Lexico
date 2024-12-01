@@ -1,18 +1,21 @@
 package com.lexical;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class TabelaSimbolos {
     private Map<String, Simbolo> tabela;
+    private int contadorIdentificadores; // Contador para identificar numericamente
 
     public TabelaSimbolos() {
-        this.tabela = new HashMap<>();
+        this.tabela = new LinkedHashMap<>(); // Mantém a ordem de inserção
+        this.contadorIdentificadores = 1; // Inicia com 1
     }
 
     public void adicionarSimbolo(String nome, String tipo) {
         if (!tabela.containsKey(nome)) {
-            tabela.put(nome, new Simbolo(nome, tipo));
+            String tipoNumerado = tipo.equals("Desconhecido") ? "Identificador " + contadorIdentificadores++ : tipo;
+            tabela.put(nome, new Simbolo(nome, tipoNumerado));
         }
     }
 
@@ -42,4 +45,3 @@ public class TabelaSimbolos {
         }
     }
 }
-

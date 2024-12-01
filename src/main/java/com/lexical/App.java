@@ -6,7 +6,7 @@ import java.util.*;
 public class App {
     public static void main(String[] args) {
         try {
-            String codigo = Files.readString(Paths.get("src/main/resources/exemplo.txt"));
+            String codigo = Files.readString(Paths.get("src/main/resources/codigo.txt"));
 
             AnalisadorLexico analisador = new AnalisadorLexico();
             List<Token> tokens = analisador.analisar(codigo);

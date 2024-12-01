@@ -4,11 +4,13 @@ import java.util.*;
 import java.util.regex.*;
 
 public class AnalisadorLexico {
-    private static final String[] PALAVRAS_CHAVE = {"int", "float", "if", "else", "while", "return"};
+    private static final Set<String> PALAVRAS_CHAVE = new HashSet<>(Arrays.asList("int", "float", "if", "else", "while", "return"));
     private static final String OPERADORES = "[+\\-*/=<>!&|]";
     private static final String DELIMITADORES = "[;,.(){}\\[\\]]";
     private static final String IDENTIFICADOR = "[a-zA-Z_][a-zA-Z0-9_]*";
     private static final String NUMERO = "\\d+(\\.\\d+)?";
+    private static final String STRING_LITERAL = "\"(\\\\.|[^\"\\\\])*\""; // Suporte para strings
+    private static final String CHAR_LITERAL = "'(\\\\.|[^'\\\\])'"; // Suporte para caracteres
 
     private TabelaSimbolos tabelaSimbolos;
 
@@ -24,65 +26,77 @@ public class AnalisadorLexico {
             linha = linha.trim();
 
             // Ignorar comentários
-            if (linha.startsWith("//")) continue;
-            linha = linha.replaceAll("/\\*.*?\\*/", ""); // Remover comentários de bloco
-
-            Matcher matcher;
+            linha = removerComentarios(linha);
 
             while (!linha.isEmpty()) {
-                // Palavras-chave
-                for (String palavra : PALAVRAS_CHAVE) {
-                    if (linha.startsWith(palavra + " ")) {
-                        tokens.add(new Token("Palavra-chave", palavra));
-                        linha = linha.substring(palavra.length()).trim();
-                        continue;
-                    }
+                Token token = identificarToken(linha);
+                if (token != null) {
+                    tokens.add(token);
+                    linha = linha.substring(token.getValor().length()).trim();
+                } else {
+                    throw new LexicalException("Token inválido encontrado: " + linha);
                 }
-
-                // Identificadores
-                matcher = Pattern.compile(IDENTIFICADOR).matcher(linha);
-                if (matcher.find() && matcher.start() == 0) {
-                    String identificador = matcher.group();
-                    tokens.add(new Token("Identificador", identificador));
-                    tabelaSimbolos.adicionarSimbolo(identificador, "Desconhecido"); // Atualize o tipo no contexto semântico
-                    linha = linha.substring(identificador.length()).trim();
-                    continue;
-                }
-
-                // Números
-                matcher = Pattern.compile(NUMERO).matcher(linha);
-                if (matcher.find() && matcher.start() == 0) {
-                    tokens.add(new Token("Número", matcher.group()));
-                    linha = linha.substring(matcher.group().length()).trim();
-                    continue;
-                }
-
-                // Operadores
-                matcher = Pattern.compile(OPERADORES).matcher(linha);
-                if (matcher.find() && matcher.start() == 0) {
-                    tokens.add(new Token("Operador", matcher.group()));
-                    linha = linha.substring(matcher.group().length()).trim();
-                    continue;
-                }
-
-                // Delimitadores
-                matcher = Pattern.compile(DELIMITADORES).matcher(linha);
-                if (matcher.find() && matcher.start() == 0) {
-                    tokens.add(new Token("Delimitador", matcher.group()));
-                    linha = linha.substring(matcher.group().length()).trim();
-                    continue;
-                }
-
-                // Caso nenhum token seja identificado
-                throw new RuntimeException("Token inválido encontrado: " + linha);
             }
         }
 
         return tokens;
     }
 
+    private String removerComentarios(String linha) {
+        if (linha.startsWith("//")) return "";
+        return linha.replaceAll("/\\*.*?\\*/", "");
+    }
+
+    private Token identificarToken(String linha) {
+        // Literais de string
+        Matcher matcher = Pattern.compile(STRING_LITERAL).matcher(linha);
+        if (matcher.find() && matcher.start() == 0) {
+            return new Token("String", matcher.group());
+        }
+
+        // Literais de caractere
+        matcher = Pattern.compile(CHAR_LITERAL).matcher(linha);
+        if (matcher.find() && matcher.start() == 0) {
+            return new Token("Char", matcher.group());
+        }
+
+        // Palavras-chave
+        for (String palavra : PALAVRAS_CHAVE) {
+            if (linha.startsWith(palavra + " ")) {
+                return new Token("Palavra-chave", palavra);
+            }
+        }
+
+        // Identificadores
+        matcher = Pattern.compile(IDENTIFICADOR).matcher(linha);
+        if (matcher.find() && matcher.start() == 0) {
+            String identificador = matcher.group();
+            tabelaSimbolos.adicionarSimbolo(identificador, "Desconhecido");
+            return new Token("Identificador", identificador);
+        }
+
+        // Números
+        matcher = Pattern.compile(NUMERO).matcher(linha);
+        if (matcher.find() && matcher.start() == 0) {
+            return new Token("Número", matcher.group());
+        }
+
+        // Operadores
+        matcher = Pattern.compile(OPERADORES).matcher(linha);
+        if (matcher.find() && matcher.start() == 0) {
+            return new Token("Operador", matcher.group());
+        }
+
+        // Delimitadores
+        matcher = Pattern.compile(DELIMITADORES).matcher(linha);
+        if (matcher.find() && matcher.start() == 0) {
+            return new Token("Delimitador", matcher.group());
+        }
+
+        return null;
+    }
+
     public TabelaSimbolos getTabelaSimbolos() {
         return tabelaSimbolos;
     }
 }
-
