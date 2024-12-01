@@ -4,7 +4,7 @@ import java.util.*;
 import java.util.regex.*;
 
 public class AnalisadorLexico {
-    private static final Set<String> PALAVRAS_CHAVE = new HashSet<>(Arrays.asList("int", "float", "if", "else", "while", "return"));
+    private static final Set<String> PALAVRAS_CHAVE = new HashSet<>(Arrays.asList("int", "float", "if", "else", "while", "return", "for"));
     private static final String OPERADORES = "[+\\-*/=<>!&|]";
     private static final String DELIMITADORES = "[;,.(){}\\[\\]]";
     private static final String IDENTIFICADOR = "[a-zA-Z_][a-zA-Z0-9_]*";
